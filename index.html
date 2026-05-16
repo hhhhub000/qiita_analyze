@@ -26,8 +26,15 @@
       background: var(--primary);
       color: white;
       padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
     header h1 { margin: 0; font-size: 20px; }
+    header .author { font-size: 13px; }
+    header .author a { color: white; text-decoration: underline; }
+    header .author a:hover { opacity: 0.85; }
     main { padding: 24px; max-width: 1100px; margin: 0 auto; }
     .controls {
       display: flex;
@@ -104,14 +111,16 @@
   </style>
 </head>
 <body>
-  <header><h1>Qiita Contribution 分析</h1></header>
+  <header>
+    <h1>Qiita Contribution 分析</h1>
+    <div class="author">by <a href="https://qiita.com/hokutoh" target="_blank" rel="noopener">@hokutoh</a></div>
+  </header>
   <main>
     <div class="controls">
       <div class="row">
-        <input id="userId" type="text" placeholder="QiitaユーザーIDを入力 (例: Qiita)" />
+        <input id="userId" type="text" placeholder="QiitaユーザーIDを入力 (例: Qiita)  ※ @ はつけないでください" />
         <button id="analyzeBtn">分析する</button>
       </div>
-      <div class="hint">※ ユーザーIDに <code>@</code> はつけないでください。</div>
       <div class="row">
         <input id="token" type="password" placeholder="Qiita アクセストークン (任意・未入力でも動作)" autocomplete="off" />
         <label class="inline"><input id="remember" type="checkbox" checked />ブラウザに保存</label>
