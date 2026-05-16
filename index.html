@@ -92,6 +92,12 @@
       padding: 16px;
     }
     .chart-card h2 { margin: 0 0 12px; font-size: 16px; }
+    table.formula { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 12px; }
+    table.formula th, table.formula td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+    table.formula th { background: #fafafa; }
+    table.formula td:nth-child(2), table.formula th:nth-child(2) { text-align: right; width: 60px; }
+    table.formula td:nth-child(3), table.formula th:nth-child(3) { text-align: center; width: 90px; }
+    table.formula th.section { background: #eef7e6; color: #333; }
     .status { margin-bottom: 16px; color: var(--muted); font-size: 14px; min-height: 20px; }
     .error { color: #c00; }
     .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
@@ -105,6 +111,7 @@
         <input id="userId" type="text" placeholder="QiitaユーザーIDを入力 (例: Qiita)" />
         <button id="analyzeBtn">分析する</button>
       </div>
+      <div class="hint">※ ユーザーIDに <code>@</code> はつけないでください。</div>
       <div class="row">
         <input id="token" type="password" placeholder="Qiita アクセストークン (任意・未入力でも動作)" autocomplete="off" />
         <label class="inline"><input id="remember" type="checkbox" checked />ブラウザに保存</label>
@@ -124,6 +131,10 @@
       <div class="card"><div class="label">合計 Contribution</div><div id="sumTotal" class="value">0</div></div>
     </div>
 
+    <div id="noteWrap" style="display:none; margin-bottom: 16px; color: var(--muted); font-size: 13px;">
+      ※ 本ツールでは <strong>記事投稿のみのContributionを集計</strong>しています。
+    </div>
+
     <div id="charts" class="charts" style="display:none;">
       <div class="chart-card">
         <h2>Contribution の月次推移（累計）</h2>
@@ -136,9 +147,42 @@
       <div class="chart-card">
         <h2>Contribution 内訳</h2>
         <canvas id="pieChart" height="220"></canvas>
-        <div class="hint">※ LGTM 数とストック数の比率</div>
+        <div class="hint">※ 計算後の Contribution 点数べースの内訳</div>
       </div>
     </div>
+
+    <section id="formulaSection" class="chart-card" style="margin-top: 24px;">
+      <h2>Contribution 計算テーブル</h2>
+      <p style="margin-top:0; color: var(--muted); font-size: 13px;">
+        出典: <a href="https://help.qiita.com/ja/articles/qiita-contribution" target="_blank" rel="noopener">Qiita ヘルプ - Contributionとは</a>。
+        本ツールでは <strong>APIで取得可能な「記事投稿」要素のみ</strong> (⚫印) を集計しています。
+      </p>
+      <table class="formula">
+        <thead><tr><th>項目</th><th>点数</th><th>集計対象</th></tr></thead>
+        <tbody>
+          <tr><th colspan="3" class="section">記事について</th></tr>
+          <tr><td>自分の記事についたいいね</td><td>1</td><td>⚫</td></tr>
+          <tr><td>記事を投稿する</td><td>1</td><td>⚫</td></tr>
+          <tr><td>自分のコメントについたいいね</td><td>0.5</td><td>—</td></tr>
+          <tr><td>自分の記事がストックされる</td><td>0.5</td><td>⚫</td></tr>
+          <tr><td>記事へコメントする</td><td>0.1</td><td>—</td></tr>
+          <tr><th colspan="3" class="section">編集リクエストについて</th></tr>
+          <tr><td>編集リクエストが承諾される（2022年4月1日以降)</td><td>1</td><td>—</td></tr>
+          <tr><td>編集リクエストが承諾される（2022年3月31日以前)</td><td>5</td><td>—</td></tr>
+          <tr><td>編集リクエストを送信する</td><td>0.2</td><td>—</td></tr>
+          <tr><th colspan="3" class="section">質問について</th></tr>
+          <tr><td>自分の質問についたいいね</td><td>0.2</td><td>—</td></tr>
+          <tr><td>自分の回答についたいいね</td><td>0.5</td><td>—</td></tr>
+          <tr><td>回答を投稿する</td><td>0.2</td><td>—</td></tr>
+          <tr><td>質問を投稿する</td><td>0.1</td><td>—</td></tr>
+          <tr><th colspan="3" class="section">ストックリストについて</th></tr>
+          <tr><td>自分のストックリストについたいいね</td><td>0.2</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <p style="color: var(--muted); font-size: 12px; margin-bottom: 0;">
+        ⚫ = 本ツールで集計対象 / — = 未集計 (APIで人・記事単位に足し上げるのが困難、または Qiita Team 限定となるため)
+      </p>
+    </section>
   </main>
 
   <script>
@@ -202,14 +246,14 @@
       for (const it of items) {
         const d = new Date(it.created_at);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const cur = map.get(key) || { likes: 0, stocks: 0, count: 0 };
+        const cur = map.get(key) || { likes: 0, stocks: 0, posts: 0 };
         cur.likes += it.likes_count || 0;
         cur.stocks += it.stocks_count || 0;
-        cur.count += 1;
+        cur.posts += 1;
         map.set(key, cur);
       }
       const keys = [...map.keys()].sort();
-      if (keys.length === 0) return { labels: [], monthly: [], cumulative: [], likesCum: [], stocksCum: [] };
+      if (keys.length === 0) return { labels: [], monthly: [], cumulative: [], likesCum: [], stocksCum: [], postsCum: [] };
       // 月の連続性を保つ
       const fill = [];
       const [sy, sm] = keys[0].split("-").map(Number);
@@ -220,35 +264,48 @@
         m++;
         if (m > 12) { m = 1; y++; }
       }
-      let cumL = 0, cumS = 0;
+      let cumL = 0, cumS = 0, cumP = 0;
       const monthly = [];
       const cumulative = [];
       const likesCum = [];
       const stocksCum = [];
+      const postsCum = [];
       for (const k of fill) {
-        const v = map.get(k) || { likes: 0, stocks: 0 };
+        const v = map.get(k) || { likes: 0, stocks: 0, posts: 0 };
         cumL += v.likes;
         cumS += v.stocks;
-        monthly.push(v.likes + v.stocks);
-        cumulative.push(cumL + cumS);
-        likesCum.push(cumL);
-        stocksCum.push(cumS);
+        cumP += v.posts;
+        // Qiita Contribution: いいね×1 + 記事投稿×1 + ストック×0.5
+        const monthContrib = v.likes * 1 + v.posts * 1 + v.stocks * 0.5;
+        monthly.push(monthContrib);
+        cumulative.push(cumL * 1 + cumP * 1 + cumS * 0.5);
+        likesCum.push(cumL * 1);
+        stocksCum.push(cumS * 0.5);
+        postsCum.push(cumP * 1);
       }
-      return { labels: fill, monthly, cumulative, likesCum, stocksCum };
+      return { labels: fill, monthly, cumulative, likesCum, stocksCum, postsCum };
     }
 
     function renderCharts(items) {
       const totalLikes = items.reduce((s, x) => s + (x.likes_count || 0), 0);
       const totalStocks = items.reduce((s, x) => s + (x.stocks_count || 0), 0);
+      const totalPosts = items.length;
+      // Qiita公式の計算式 (記事投稿要素のみ):
+      //   いいね×1 + 記事投稿×1 + ストック×0.5
+      const contribLikes = totalLikes * 1;
+      const contribPosts = totalPosts * 1;
+      const contribStocks = totalStocks * 0.5;
+      const contribTotal = contribLikes + contribPosts + contribStocks;
 
       document.getElementById("summary").style.display = "grid";
+      document.getElementById("noteWrap").style.display = "block";
       document.getElementById("charts").style.display = "grid";
-      document.getElementById("sumItems").textContent = items.length.toLocaleString();
+      document.getElementById("sumItems").textContent = totalPosts.toLocaleString();
       document.getElementById("sumLikes").textContent = totalLikes.toLocaleString();
       document.getElementById("sumStocks").textContent = totalStocks.toLocaleString();
-      document.getElementById("sumTotal").textContent = (totalLikes + totalStocks).toLocaleString();
+      document.getElementById("sumTotal").textContent = formatNum(contribTotal);
 
-      const { labels, monthly, cumulative, likesCum, stocksCum } = aggregateByMonth(items);
+      const { labels, monthly, cumulative, likesCum, stocksCum, postsCum } = aggregateByMonth(items);
 
       if (lineChart) lineChart.destroy();
       lineChart = new Chart(document.getElementById("lineChart"), {
@@ -265,7 +322,7 @@
               tension: 0.2,
             },
             {
-              label: "LGTM (累計)",
+              label: "いいね分 (累計×1)",
               data: likesCum,
               borderColor: "#ff6384",
               backgroundColor: "rgba(255,99,132,0.05)",
@@ -273,7 +330,15 @@
               tension: 0.2,
             },
             {
-              label: "ストック (累計)",
+              label: "記事投稿分 (累計×1)",
+              data: postsCum,
+              borderColor: "#ffa500",
+              backgroundColor: "rgba(255,165,0,0.05)",
+              fill: false,
+              tension: 0.2,
+            },
+            {
+              label: "ストック分 (累計×0.5)",
               data: stocksCum,
               borderColor: "#36a2eb",
               backgroundColor: "rgba(54,162,235,0.05)",
@@ -300,18 +365,32 @@
       pieChart = new Chart(document.getElementById("pieChart"), {
         type: "doughnut",
         data: {
-          labels: ["LGTM", "ストック"],
+          labels: [
+            `いいね ×1 (${formatNum(contribLikes)})`,
+            `記事投稿 ×1 (${formatNum(contribPosts)})`,
+            `ストック ×0.5 (${formatNum(contribStocks)})`,
+          ],
           datasets: [{
-            data: [totalLikes, totalStocks],
-            backgroundColor: ["#ff6384", "#36a2eb"],
+            data: [contribLikes, contribPosts, contribStocks],
+            backgroundColor: ["#ff6384", "#ffa500", "#36a2eb"],
           }],
         },
         options: { responsive: true },
       });
     }
 
+    function formatNum(n) {
+      // 小数点以下があれば 1 桁表示
+      return Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    }
+
     async function run() {
-      const userId = input.value.trim();
+      let userId = input.value.trim();
+      // 先頭の @ を除去して許容
+      if (userId.startsWith("@")) {
+        userId = userId.slice(1);
+        input.value = userId;
+      }
       if (!userId) { setStatus("ユーザーIDを入力してください", true); return; }
       const token = tokenInput.value.trim();
       // トークン保存/削除
