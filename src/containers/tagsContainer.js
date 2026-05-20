@@ -81,6 +81,7 @@ function refresh() {
   }).join("");
 
   // チャート (テーブルと同じ並び順)
+  // 記事数と合計いいねはスケールが大きく異なるため、上下にデュアルX軸を設定
   const labels = sorted.map((t) => t.name);
   if (tagChart) tagChart.destroy();
   tagChart = new Chart(canvas, {
@@ -94,6 +95,7 @@ function refresh() {
           backgroundColor: "rgba(85,197,0,0.7)",
           borderColor: "#55c500",
           borderWidth: 1,
+          xAxisID: "xPosts",
         },
         {
           label: "合計いいね",
@@ -101,13 +103,28 @@ function refresh() {
           backgroundColor: "rgba(255,99,132,0.6)",
           borderColor: "#ff6384",
           borderWidth: 1,
+          xAxisID: "xLikes",
         },
       ],
     },
     options: {
       indexAxis: "y",
       responsive: true,
-      scales: { x: { beginAtZero: true } },
+      scales: {
+        xPosts: {
+          position: "top",
+          beginAtZero: true,
+          title: { display: true, text: "記事数", color: "#55c500" },
+          ticks: { color: "#55c500" },
+          grid: { drawOnChartArea: false },
+        },
+        xLikes: {
+          position: "bottom",
+          beginAtZero: true,
+          title: { display: true, text: "合計いいね", color: "#ff6384" },
+          ticks: { color: "#ff6384" },
+        },
+      },
       plugins: { legend: { position: "bottom" } },
     },
   });
