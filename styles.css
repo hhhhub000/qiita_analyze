@@ -97,6 +97,7 @@ button:disabled { background: #aaa; cursor: not-allowed; }
   padding: 16px;
 }
 .chart-card h2 { margin: 0 0 12px; font-size: 16px; }
+.chart-card-wide { grid-column: 1 / -1; }
 
 /* ===== Formula table ===== */
 table.formula { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 12px; }

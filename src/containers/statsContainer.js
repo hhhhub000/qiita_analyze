@@ -2,7 +2,7 @@
 // LGTM分布の代表値・ばらつき・集中度・投稿頻度などを表示。
 import { formatNum } from "../utils/format.js";
 import {
-  mean, median, stdev, percentile, topShare, gini, postingCadence,
+  mean, median, stdev, percentile, postingCadence,
 } from "../utils/stats.js";
 
 let rootEl;
@@ -34,8 +34,6 @@ export function render(items) {
   const lgtmStd = stdev(likes);
   const lgtmP90 = percentile(likes, 90);
   const lgtmMax = likes.length ? Math.max(...likes) : 0;
-  const top10Share = topShare(likes, 0.1);
-  const giniLgtm = gini(likes);
   const stockLikeRatio = totalLikes > 0 ? totalStocks / totalLikes : 0;
   const contribPerPost = n > 0 ? contribTotal / n : 0;
   const cadence = postingCadence(items);
@@ -48,25 +46,6 @@ export function render(items) {
       ${card("標準偏差 σ", formatNum(lgtmStd))}
       ${card("P90 (上位10%境界)", formatNum(lgtmP90))}
       ${card("最大", formatNum(lgtmMax))}
-    </div>`;
-
-  const concentrationHtml = `
-    <h3 class="stats-subtitle">集中度 (パレート分析)</h3>
-    <div class="stats-grid">
-      ${card(
-        "上位10%記事のLGTM占有率",
-        (top10Share * 100).toFixed(1) + "%",
-        top10Share >= 0.8
-          ? "極端なロングテール (少数のヒットに依存)"
-          : top10Share >= 0.5
-            ? "やや偏り (パレートの法則寄り)"
-            : "比較的均等",
-      )}
-      ${card(
-        "Gini 係数",
-        giniLgtm.toFixed(3),
-        "0=完全平等 / 1=極端な集中",
-      )}
     </div>`;
 
   const efficiencyHtml = `
@@ -95,7 +74,6 @@ export function render(items) {
   rootEl.innerHTML = `
     <h2>統計サマリー</h2>
     ${distHtml}
-    ${concentrationHtml}
     ${efficiencyHtml}
     ${cadenceHtml}
     <div class="hint">

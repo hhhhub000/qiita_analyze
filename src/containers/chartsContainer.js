@@ -2,13 +2,14 @@ import { aggregateByMonth } from "../utils/aggregate.js";
 import { formatNum } from "../utils/format.js";
 import { movingAverage, linearRegression } from "../utils/stats.js";
 
-let rootEl, noteEl, lineCanvas, pieCanvas;
-let lineChart, pieChart;
+let rootEl, noteEl, lineCanvas, monthlyCanvas, pieCanvas;
+let lineChart, monthlyChart, pieChart;
 
 export function init(el, noteWrapEl) {
   rootEl = el;
   noteEl = noteWrapEl;
   lineCanvas = el.querySelector("#lineChart");
+  monthlyCanvas = el.querySelector("#monthlyChart");
   pieCanvas = el.querySelector("#pieChart");
 }
 
@@ -27,6 +28,7 @@ export function render(items) {
   const reg = linearRegression(monthly);
   const trendLabel = `回帰トレンド (slope=${formatNum(reg.slope)}/月, R²=${reg.r2.toFixed(2)})`;
 
+  // ===== チャートA: 累計推移 =====
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(lineCanvas, {
     type: "line",
@@ -65,15 +67,32 @@ export function render(items) {
           fill: false,
           tension: 0.2,
         },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: "index", intersect: false },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
+
+  // ===== チャートB: 月次の活動とトレンド =====
+  if (monthlyChart) monthlyChart.destroy();
+  monthlyChart = new Chart(monthlyCanvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
         {
           label: "月次 Contribution",
           data: monthly,
           type: "bar",
-          backgroundColor: "rgba(150,150,150,0.3)",
-          yAxisID: "y",
+          backgroundColor: "rgba(85,197,0,0.4)",
+          borderColor: "rgba(85,197,0,0.8)",
+          borderWidth: 1,
         },
         {
-          label: "月次 3ヶ月移動平均",
+          label: "3ヶ月移動平均",
           data: ma3,
           type: "line",
           borderColor: "#8e44ad",
@@ -82,7 +101,6 @@ export function render(items) {
           pointRadius: 0,
           fill: false,
           tension: 0.2,
-          yAxisID: "y",
         },
         {
           label: trendLabel,
@@ -94,7 +112,6 @@ export function render(items) {
           pointRadius: 0,
           fill: false,
           tension: 0,
-          yAxisID: "y",
         },
       ],
     },
@@ -105,6 +122,7 @@ export function render(items) {
     },
   });
 
+  // ===== チャートC: Contribution内訳 =====
   if (pieChart) pieChart.destroy();
   pieChart = new Chart(pieCanvas, {
     type: "doughnut",
@@ -128,6 +146,7 @@ export function render(items) {
 
 export function clear() {
   if (lineChart) { lineChart.destroy(); lineChart = null; }
+  if (monthlyChart) { monthlyChart.destroy(); monthlyChart = null; }
   if (pieChart) { pieChart.destroy(); pieChart = null; }
   if (rootEl) rootEl.style.display = "none";
   if (noteEl) noteEl.style.display = "none";

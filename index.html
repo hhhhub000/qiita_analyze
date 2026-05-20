@@ -66,6 +66,14 @@
         <canvas id="pieChart" height="220"></canvas>
         <div class="hint">※ 計算後の Contribution 点数べースの内訳</div>
       </div>
+      <div class="chart-card chart-card-wide">
+        <h2>月次の活動とトレンド</h2>
+        <canvas id="monthlyChart" height="160"></canvas>
+        <div class="hint">
+          ※ 棒=その月単独のContribution / 紫破線=3ヶ月移動平均 (短期的なノイズを除去したトレンド) /
+          赤線=線形回帰によるトレンドライン。slope は1ヶ月あたりの増減ペース、R² は当てはまり度 (1に近いほど直線的に成長)。
+        </div>
+      </div>
     </div>
 
     <!-- 記事 TOP5 ランキング -->
