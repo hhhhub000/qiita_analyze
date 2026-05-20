@@ -39,7 +39,7 @@ export function render(items) {
   const cadence = postingCadence(items);
 
   const distHtml = `
-    <h3 class="stats-subtitle">LGTM 分布</h3>
+    <h3 class="stats-subtitle">いいね 分布</h3>
     <div class="stats-grid">
       ${card("平均", formatNum(lgtmMean))}
       ${card("中央値", formatNum(lgtmMedian))}
@@ -78,7 +78,7 @@ export function render(items) {
     ${cadenceHtml}
     <div class="hint">
       ※ 平均と中央値が大きく乖離する場合、少数のヒット記事に分布が引っ張られています。
-      P90 は「上位10%以上の記事はLGTMがこの値以上」という閾値です。
+      P90 は「上位10%以上の記事はいいねがこの値以上」という閾値です。
     </div>
   `;
   rootEl.style.display = "block";
