@@ -2,121 +2,19 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Qiita Contribution 分析</title>
+  <title>Qiita ユーザー分析</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --primary: #55c500;
-      --bg: #f7f7f7;
-      --card: #ffffff;
-      --text: #333;
-      --muted: #777;
-      --border: #e0e0e0;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
-        "Yu Gothic", Meiryo, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    header {
-      background: var(--primary);
-      color: white;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    header h1 { margin: 0; font-size: 20px; }
-    header .author { font-size: 13px; }
-    header .author a { color: white; text-decoration: underline; }
-    header .author a:hover { opacity: 0.85; }
-    main { padding: 24px; max-width: 1100px; margin: 0 auto; }
-    .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    input[type="text"], input[type="password"] {
-      flex: 1;
-      min-width: 220px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    label.inline { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
-    button.secondary { background: #999; }
-    button {
-      padding: 10px 20px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    button:disabled { background: #aaa; cursor: not-allowed; }
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .summary .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      text-align: center;
-    }
-    .summary .label { color: var(--muted); font-size: 12px; }
-    .summary .value { font-size: 24px; font-weight: bold; margin-top: 4px; }
-    .charts {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 800px) {
-      .charts { grid-template-columns: 1fr; }
-    }
-    .chart-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-    }
-    .chart-card h2 { margin: 0 0 12px; font-size: 16px; }
-    table.formula { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 12px; }
-    table.formula th, table.formula td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
-    table.formula th { background: #fafafa; }
-    table.formula td:nth-child(2), table.formula th:nth-child(2) { text-align: right; width: 60px; }
-    table.formula td:nth-child(3), table.formula th:nth-child(3) { text-align: center; width: 90px; }
-    table.formula th.section { background: #eef7e6; color: #333; }
-    .status { margin-bottom: 16px; color: var(--muted); font-size: 14px; min-height: 20px; }
-    .error { color: #c00; }
-    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  </style>
 </head>
 <body>
   <header>
-    <h1>Qiita Contribution 分析</h1>
+    <h1>Qiita ユーザー分析</h1>
     <div class="author">by <a href="https://qiita.com/hokutoh" target="_blank" rel="noopener">@hokutoh</a></div>
   </header>
   <main>
-    <div class="controls">
+    <!-- 入力コントロール -->
+    <div id="controls" class="controls">
       <div class="row">
         <input id="userId" type="text" placeholder="QiitaユーザーIDを入力 (例: Qiita)  ※ @ はつけないでください" />
         <button id="analyzeBtn">分析する</button>
@@ -131,8 +29,14 @@
         未認証は 60req/時、認証時は 1000req/時。保存先はブラウザの localStorage です。
       </div>
     </div>
+
+    <!-- ステータス表示 -->
     <div id="status" class="status"></div>
 
+    <!-- プロフィールカード -->
+    <aside id="profile" class="profile-card" style="display:none;"></aside>
+
+    <!-- サマリー -->
     <div id="summary" class="summary" style="display:none;">
       <div class="card"><div class="label">記事数</div><div id="sumItems" class="value">0</div></div>
       <div class="card"><div class="label">合計 LGTM</div><div id="sumLikes" class="value">0</div></div>
@@ -144,6 +48,7 @@
       ※ 本ツールでは <strong>記事投稿のみのContributionを集計</strong>しています。
     </div>
 
+    <!-- Contribution グラフ -->
     <div id="charts" class="charts" style="display:none;">
       <div class="chart-card">
         <h2>Contribution の月次推移（累計）</h2>
@@ -160,6 +65,48 @@
       </div>
     </div>
 
+    <!-- 記事 TOP5 ランキング -->
+    <section id="rankings" class="rankings" style="display:none;">
+      <div class="chart-card">
+        <h2>いいね TOP5</h2>
+        <table class="ranking">
+          <thead>
+            <tr><th>#</th><th>タイトル</th><th class="num">LGTM</th><th class="num">ストック</th><th>投稿日</th></tr>
+          </thead>
+          <tbody id="topLikesBody"></tbody>
+        </table>
+      </div>
+      <div class="chart-card">
+        <h2>ストック TOP5</h2>
+        <table class="ranking">
+          <thead>
+            <tr><th>#</th><th>タイトル</th><th class="num">LGTM</th><th class="num">ストック</th><th>投稿日</th></tr>
+          </thead>
+          <tbody id="topStocksBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- タグ分析 TOP10 -->
+    <section id="tagsSection" class="chart-card" style="display:none;">
+      <h2>タグ分析 TOP10</h2>
+      <div class="tags-grid">
+        <div>
+          <canvas id="tagsChart" height="240"></canvas>
+        </div>
+        <div>
+          <table class="tags">
+            <thead>
+              <tr><th>タグ</th><th class="num">記事数</th><th class="num">合計いいね</th><th class="num">平均いいね</th></tr>
+            </thead>
+            <tbody id="tagsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="hint">※ 記事数の多い順 TOP10。タイブレークは合計いいね降順。</div>
+    </section>
+
+    <!-- Contribution 計算テーブル -->
     <section id="formulaSection" class="chart-card" style="margin-top: 24px;">
       <h2>Contribution 計算テーブル</h2>
       <p style="margin-top:0; color: var(--muted); font-size: 13px;">
@@ -194,237 +141,6 @@
     </section>
   </main>
 
-  <script>
-    const API_BASE = "https://qiita.com/api/v2";
-    const TOKEN_KEY = "qiita_analyze_token";
-    const statusEl = document.getElementById("status");
-    const btn = document.getElementById("analyzeBtn");
-    const input = document.getElementById("userId");
-    const tokenInput = document.getElementById("token");
-    const rememberInput = document.getElementById("remember");
-    const clearTokenBtn = document.getElementById("clearTokenBtn");
-    let lineChart, pieChart;
-
-    // 起動時に保存済みトークンを読み込み
-    try {
-      const saved = localStorage.getItem(TOKEN_KEY);
-      if (saved) tokenInput.value = saved;
-    } catch (_) {}
-
-    btn.addEventListener("click", run);
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
-    tokenInput.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
-    clearTokenBtn.addEventListener("click", () => {
-      tokenInput.value = "";
-      try { localStorage.removeItem(TOKEN_KEY); } catch (_) {}
-      setStatus("保存済みトークンを削除しました");
-    });
-
-    function setStatus(msg, isError = false) {
-      statusEl.textContent = msg;
-      statusEl.className = "status" + (isError ? " error" : "");
-    }
-
-    async function fetchAllItems(userId, token) {
-      const perPage = 100;
-      let page = 1;
-      const all = [];
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      while (page <= 100) {
-        const url = `${API_BASE}/users/${encodeURIComponent(userId)}/items?page=${page}&per_page=${perPage}`;
-        const res = await fetch(url, { headers });
-        if (!res.ok) {
-          if (res.status === 401) throw new Error("アクセストークンが無効です");
-          if (res.status === 404) throw new Error("ユーザーが見つかりません");
-          if (res.status === 403 || res.status === 429) throw new Error("APIレート制限に達しました。しばらく待ってから再試行してください");
-          throw new Error(`APIエラー: ${res.status}`);
-        }
-        const totalCount = parseInt(res.headers.get("Total-Count") || "0", 10);
-        const items = await res.json();
-        all.push(...items);
-        setStatus(`記事取得中... ${all.length} / ${totalCount}`);
-        if (items.length < perPage) break;
-        if (all.length >= totalCount) break;
-        page++;
-      }
-      return all;
-    }
-
-    function aggregateByMonth(items) {
-      const map = new Map();
-      for (const it of items) {
-        const d = new Date(it.created_at);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const cur = map.get(key) || { likes: 0, stocks: 0, posts: 0 };
-        cur.likes += it.likes_count || 0;
-        cur.stocks += it.stocks_count || 0;
-        cur.posts += 1;
-        map.set(key, cur);
-      }
-      const keys = [...map.keys()].sort();
-      if (keys.length === 0) return { labels: [], monthly: [], cumulative: [], likesCum: [], stocksCum: [], postsCum: [] };
-      // 月の連続性を保つ
-      const fill = [];
-      const [sy, sm] = keys[0].split("-").map(Number);
-      const [ey, em] = keys[keys.length - 1].split("-").map(Number);
-      let y = sy, m = sm;
-      while (y < ey || (y === ey && m <= em)) {
-        fill.push(`${y}-${String(m).padStart(2, "0")}`);
-        m++;
-        if (m > 12) { m = 1; y++; }
-      }
-      let cumL = 0, cumS = 0, cumP = 0;
-      const monthly = [];
-      const cumulative = [];
-      const likesCum = [];
-      const stocksCum = [];
-      const postsCum = [];
-      for (const k of fill) {
-        const v = map.get(k) || { likes: 0, stocks: 0, posts: 0 };
-        cumL += v.likes;
-        cumS += v.stocks;
-        cumP += v.posts;
-        // Qiita Contribution: いいね×1 + 記事投稿×1 + ストック×0.5
-        const monthContrib = v.likes * 1 + v.posts * 1 + v.stocks * 0.5;
-        monthly.push(monthContrib);
-        cumulative.push(cumL * 1 + cumP * 1 + cumS * 0.5);
-        likesCum.push(cumL * 1);
-        stocksCum.push(cumS * 0.5);
-        postsCum.push(cumP * 1);
-      }
-      return { labels: fill, monthly, cumulative, likesCum, stocksCum, postsCum };
-    }
-
-    function renderCharts(items) {
-      const totalLikes = items.reduce((s, x) => s + (x.likes_count || 0), 0);
-      const totalStocks = items.reduce((s, x) => s + (x.stocks_count || 0), 0);
-      const totalPosts = items.length;
-      // Qiita公式の計算式 (記事投稿要素のみ):
-      //   いいね×1 + 記事投稿×1 + ストック×0.5
-      const contribLikes = totalLikes * 1;
-      const contribPosts = totalPosts * 1;
-      const contribStocks = totalStocks * 0.5;
-      const contribTotal = contribLikes + contribPosts + contribStocks;
-
-      document.getElementById("summary").style.display = "grid";
-      document.getElementById("noteWrap").style.display = "block";
-      document.getElementById("charts").style.display = "grid";
-      document.getElementById("sumItems").textContent = totalPosts.toLocaleString();
-      document.getElementById("sumLikes").textContent = totalLikes.toLocaleString();
-      document.getElementById("sumStocks").textContent = totalStocks.toLocaleString();
-      document.getElementById("sumTotal").textContent = formatNum(contribTotal);
-
-      const { labels, monthly, cumulative, likesCum, stocksCum, postsCum } = aggregateByMonth(items);
-
-      if (lineChart) lineChart.destroy();
-      lineChart = new Chart(document.getElementById("lineChart"), {
-        type: "line",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Contribution (累計)",
-              data: cumulative,
-              borderColor: "#55c500",
-              backgroundColor: "rgba(85,197,0,0.15)",
-              fill: true,
-              tension: 0.2,
-            },
-            {
-              label: "いいね分 (累計×1)",
-              data: likesCum,
-              borderColor: "#ff6384",
-              backgroundColor: "rgba(255,99,132,0.05)",
-              fill: false,
-              tension: 0.2,
-            },
-            {
-              label: "記事投稿分 (累計×1)",
-              data: postsCum,
-              borderColor: "#ffa500",
-              backgroundColor: "rgba(255,165,0,0.05)",
-              fill: false,
-              tension: 0.2,
-            },
-            {
-              label: "ストック分 (累計×0.5)",
-              data: stocksCum,
-              borderColor: "#36a2eb",
-              backgroundColor: "rgba(54,162,235,0.05)",
-              fill: false,
-              tension: 0.2,
-            },
-            {
-              label: "月次 Contribution",
-              data: monthly,
-              type: "bar",
-              backgroundColor: "rgba(150,150,150,0.3)",
-              yAxisID: "y",
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          interaction: { mode: "index", intersect: false },
-          scales: { y: { beginAtZero: true } },
-        },
-      });
-
-      if (pieChart) pieChart.destroy();
-      pieChart = new Chart(document.getElementById("pieChart"), {
-        type: "doughnut",
-        data: {
-          labels: [
-            `いいね ×1 (${formatNum(contribLikes)})`,
-            `記事投稿 ×1 (${formatNum(contribPosts)})`,
-            `ストック ×0.5 (${formatNum(contribStocks)})`,
-          ],
-          datasets: [{
-            data: [contribLikes, contribPosts, contribStocks],
-            backgroundColor: ["#ff6384", "#ffa500", "#36a2eb"],
-          }],
-        },
-        options: { responsive: true },
-      });
-    }
-
-    function formatNum(n) {
-      // 小数点以下があれば 1 桁表示
-      return Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 1 });
-    }
-
-    async function run() {
-      let userId = input.value.trim();
-      // 先頭の @ を除去して許容
-      if (userId.startsWith("@")) {
-        userId = userId.slice(1);
-        input.value = userId;
-      }
-      if (!userId) { setStatus("ユーザーIDを入力してください", true); return; }
-      const token = tokenInput.value.trim();
-      // トークン保存/削除
-      try {
-        if (token && rememberInput.checked) localStorage.setItem(TOKEN_KEY, token);
-        else if (!rememberInput.checked) localStorage.removeItem(TOKEN_KEY);
-      } catch (_) {}
-      btn.disabled = true;
-      setStatus("取得開始...");
-      try {
-        const items = await fetchAllItems(userId, token);
-        if (items.length === 0) {
-          setStatus("このユーザーの記事は見つかりませんでした");
-          document.getElementById("summary").style.display = "none";
-          document.getElementById("charts").style.display = "none";
-          return;
-        }
-        setStatus(`取得完了: ${items.length} 件`);
-        renderCharts(items);
-      } catch (e) {
-        setStatus(e.message || String(e), true);
-      } finally {
-        btn.disabled = false;
-      }
-    }
-  </script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>

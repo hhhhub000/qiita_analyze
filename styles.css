@@ -1,0 +1,186 @@
+:root {
+  --primary: #55c500;
+  --bg: #f7f7f7;
+  --card: #ffffff;
+  --text: #333;
+  --muted: #777;
+  --border: #e0e0e0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  background: var(--primary);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+header h1 { margin: 0; font-size: 20px; }
+header .author { font-size: 13px; }
+header .author a { color: white; text-decoration: underline; }
+header .author a:hover { opacity: 0.85; }
+main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+/* ===== Controls ===== */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+input[type="text"], input[type="password"] {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+label.inline { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+button.secondary { background: #999; }
+button {
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+button:disabled { background: #aaa; cursor: not-allowed; }
+
+/* ===== Summary ===== */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.summary .card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.summary .label { color: var(--muted); font-size: 12px; }
+.summary .value { font-size: 24px; font-weight: bold; margin-top: 4px; }
+
+/* ===== Charts ===== */
+.charts {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 800px) {
+  .charts { grid-template-columns: 1fr; }
+}
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.chart-card h2 { margin: 0 0 12px; font-size: 16px; }
+
+/* ===== Formula table ===== */
+table.formula { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 12px; }
+table.formula th, table.formula td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+table.formula th { background: #fafafa; }
+table.formula td:nth-child(2), table.formula th:nth-child(2) { text-align: right; width: 60px; }
+table.formula td:nth-child(3), table.formula th:nth-child(3) { text-align: center; width: 90px; }
+table.formula th.section { background: #eef7e6; color: #333; }
+
+/* ===== Status ===== */
+.status { margin-bottom: 16px; color: var(--muted); font-size: 14px; min-height: 20px; }
+.error { color: #c00; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+/* ===== Profile card (Phase 2) ===== */
+.profile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.profile-card img.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.profile-card .profile-body { flex: 1; min-width: 0; }
+.profile-card .profile-name { font-size: 18px; font-weight: bold; margin: 0 0 4px; }
+.profile-card .profile-id { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+.profile-card .profile-id a { color: var(--muted); text-decoration: none; }
+.profile-card .profile-id a:hover { text-decoration: underline; }
+.profile-card .profile-desc { font-size: 13px; margin: 0 0 8px; white-space: pre-wrap; word-wrap: break-word; }
+.profile-card .profile-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); }
+.profile-card .profile-meta b { color: var(--text); }
+.profile-card .profile-links { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+.profile-card .profile-links a { color: var(--primary); text-decoration: none; }
+.profile-card .profile-links a:hover { text-decoration: underline; }
+@media (max-width: 600px) {
+  .profile-card { flex-direction: column; align-items: center; text-align: center; }
+  .profile-card .profile-meta { justify-content: center; }
+}
+
+/* ===== Rankings (Phase 2) ===== */
+.rankings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+@media (max-width: 800px) {
+  .rankings { grid-template-columns: 1fr; }
+}
+table.ranking { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.ranking th, table.ranking td { border-bottom: 1px solid var(--border); padding: 8px 6px; text-align: left; }
+table.ranking th { background: #fafafa; font-weight: bold; color: var(--muted); font-size: 12px; }
+table.ranking td.rank { width: 32px; text-align: center; font-weight: bold; color: var(--primary); }
+table.ranking td.num { text-align: right; width: 56px; font-variant-numeric: tabular-nums; }
+table.ranking td.date { width: 90px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+table.ranking td.title a { color: var(--text); text-decoration: none; }
+table.ranking td.title a:hover { color: var(--primary); text-decoration: underline; }
+table.ranking td.title { word-break: break-word; }
+.no-data { color: var(--muted); font-size: 13px; padding: 12px 0; text-align: center; }
+
+/* ===== Tags (Phase 2) ===== */
+#tagsSection { margin-top: 24px; }
+.tags-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .tags-grid { grid-template-columns: 1fr; }
+}
+table.tags { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.tags th, table.tags td { border-bottom: 1px solid var(--border); padding: 6px 8px; }
+table.tags th { background: #fafafa; font-weight: bold; color: var(--muted); font-size: 12px; text-align: left; }
+table.tags td.tag { font-weight: bold; }
+table.tags td.tag a { color: var(--primary); text-decoration: none; }
+table.tags td.tag a:hover { text-decoration: underline; }
+table.tags td.num { text-align: right; width: 70px; font-variant-numeric: tabular-nums; }
