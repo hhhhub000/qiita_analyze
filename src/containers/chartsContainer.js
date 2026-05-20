@@ -1,5 +1,6 @@
 import { aggregateByMonth } from "../utils/aggregate.js";
 import { formatNum } from "../utils/format.js";
+import { movingAverage, linearRegression } from "../utils/stats.js";
 
 let rootEl, noteEl, lineCanvas, pieCanvas;
 let lineChart, pieChart;
@@ -20,6 +21,11 @@ export function render(items) {
   const contribStocks = totalStocks * 0.5;
 
   const { labels, monthly, cumulative, likesCum, stocksCum, postsCum } = aggregateByMonth(items);
+
+  // 月次Contribution の 3ヶ月移動平均 と 線形回帰トレンド
+  const ma3 = movingAverage(monthly, 3);
+  const reg = linearRegression(monthly);
+  const trendLabel = `回帰トレンド (slope=${formatNum(reg.slope)}/月, R²=${reg.r2.toFixed(2)})`;
 
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(lineCanvas, {
@@ -64,6 +70,30 @@ export function render(items) {
           data: monthly,
           type: "bar",
           backgroundColor: "rgba(150,150,150,0.3)",
+          yAxisID: "y",
+        },
+        {
+          label: "月次 3ヶ月移動平均",
+          data: ma3,
+          type: "line",
+          borderColor: "#8e44ad",
+          backgroundColor: "rgba(142,68,173,0.05)",
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.2,
+          yAxisID: "y",
+        },
+        {
+          label: trendLabel,
+          data: reg.line,
+          type: "line",
+          borderColor: "#c0392b",
+          borderWidth: 1.5,
+          borderDash: [2, 3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
           yAxisID: "y",
         },
       ],

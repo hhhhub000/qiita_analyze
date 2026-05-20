@@ -6,6 +6,7 @@ import * as chartsContainer from "./containers/chartsContainer.js";
 import * as profileContainer from "./containers/profileContainer.js";
 import * as rankingsContainer from "./containers/rankingsContainer.js";
 import * as tagsContainer from "./containers/tagsContainer.js";
+import * as statsContainer from "./containers/statsContainer.js";
 
 // 各コンテナ初期化
 statusContainer.init(document.getElementById("status"));
@@ -15,6 +16,7 @@ chartsContainer.init(document.getElementById("charts"), document.getElementById(
 profileContainer.init(document.getElementById("profile"));
 rankingsContainer.init(document.getElementById("rankings"));
 tagsContainer.init(document.getElementById("tagsSection"));
+statsContainer.init(document.getElementById("stats"));
 
 controlsContainer.onClearToken(() => {
   statusContainer.setStatus("保存済みトークンを削除しました");
@@ -33,6 +35,7 @@ async function run({ userId, token }) {
   // 直前の表示をリセット
   profileContainer.clear();
   summaryContainer.clear();
+  statsContainer.clear();
   chartsContainer.clear();
   rankingsContainer.clear();
   tagsContainer.clear();
@@ -57,6 +60,7 @@ async function run({ userId, token }) {
 
     statusContainer.setStatus(`取得完了: ${items.length} 件`);
     summaryContainer.render(items);
+    statsContainer.render(items);
     chartsContainer.render(items);
     rankingsContainer.render(items);
     tagsContainer.render(items);
