@@ -1,13 +1,23 @@
-import { aggregateTags } from "../utils/aggregate.js";
+import { aggregateTags, sortTags } from "../utils/aggregate.js";
 import { formatNum } from "../utils/format.js";
 
-let rootEl, canvas, tbody;
+const TOP_N = 10;
+const SORT_KEYS = new Set(["name", "posts", "likes", "avgLikes"]);
+
+let rootEl, canvas, tbody, theadRow;
 let tagChart;
+let allTags = [];
+let sortKey = "posts";
+let sortDir = "desc";
 
 export function init(el) {
   rootEl = el;
   canvas = el.querySelector("#tagsChart");
   tbody = el.querySelector("#tagsTableBody");
+  theadRow = el.querySelector("#tagsTableHead");
+  if (theadRow) {
+    theadRow.addEventListener("click", onHeaderClick);
+  }
 }
 
 function esc(s) {
@@ -19,13 +29,46 @@ function esc(s) {
     .replace(/"/g, "&quot;");
 }
 
-export function render(items) {
-  if (!items || items.length === 0) { clear(); return; }
-  const tags = aggregateTags(items, 10);
-  if (tags.length === 0) { clear(); return; }
+function onHeaderClick(e) {
+  const th = e.target.closest("th[data-sort-key]");
+  if (!th) return;
+  const key = th.dataset.sortKey;
+  if (!SORT_KEYS.has(key)) return;
+  if (sortKey === key) {
+    sortDir = sortDir === "desc" ? "asc" : "desc";
+  } else {
+    sortKey = key;
+    // 数値列はデフォルト降順、名前列は昇順
+    sortDir = key === "name" ? "asc" : "desc";
+  }
+  refresh();
+}
+
+function sortIndicator(key) {
+  if (sortKey !== key) return '<span class="sort-arrow">⇅</span>';
+  return sortDir === "desc"
+    ? '<span class="sort-arrow active">▼</span>'
+    : '<span class="sort-arrow active">▲</span>';
+}
+
+function renderHeader() {
+  if (!theadRow) return;
+  theadRow.innerHTML = `
+    <th data-sort-key="name" class="sortable">タグ${sortIndicator("name")}</th>
+    <th data-sort-key="posts" class="sortable num">記事数${sortIndicator("posts")}</th>
+    <th data-sort-key="likes" class="sortable num">合計いいね${sortIndicator("likes")}</th>
+    <th data-sort-key="avgLikes" class="sortable num">平均いいね${sortIndicator("avgLikes")}</th>
+  `;
+}
+
+function refresh() {
+  if (!allTags.length) { clear(); return; }
+  const sorted = sortTags(allTags, sortKey, sortDir).slice(0, TOP_N);
+
+  renderHeader();
 
   // テーブル
-  tbody.innerHTML = tags.map((t) => {
+  tbody.innerHTML = sorted.map((t) => {
     const tagUrl = `https://qiita.com/tags/${encodeURIComponent(t.name)}`;
     return `
       <tr>
@@ -37,8 +80,8 @@ export function render(items) {
     `;
   }).join("");
 
-  // 横棒チャート (記事数 と 合計いいね を並列表示)
-  const labels = tags.map((t) => t.name);
+  // チャート (テーブルと同じ並び順)
+  const labels = sorted.map((t) => t.name);
   if (tagChart) tagChart.destroy();
   tagChart = new Chart(canvas, {
     type: "bar",
@@ -47,14 +90,14 @@ export function render(items) {
       datasets: [
         {
           label: "記事数",
-          data: tags.map((t) => t.posts),
+          data: sorted.map((t) => t.posts),
           backgroundColor: "rgba(85,197,0,0.7)",
           borderColor: "#55c500",
           borderWidth: 1,
         },
         {
           label: "合計いいね",
-          data: tags.map((t) => t.likes),
+          data: sorted.map((t) => t.likes),
           backgroundColor: "rgba(255,99,132,0.6)",
           borderColor: "#ff6384",
           borderWidth: 1,
@@ -72,8 +115,19 @@ export function render(items) {
   rootEl.style.display = "block";
 }
 
+export function render(items) {
+  if (!items || items.length === 0) { clear(); return; }
+  allTags = aggregateTags(items);
+  if (allTags.length === 0) { clear(); return; }
+  // 新しいユーザー分析のたびにデフォルトソートにリセット
+  sortKey = "posts";
+  sortDir = "desc";
+  refresh();
+}
+
 export function clear() {
   if (tagChart) { tagChart.destroy(); tagChart = null; }
   if (rootEl) rootEl.style.display = "none";
   if (tbody) tbody.innerHTML = "";
+  allTags = [];
 }

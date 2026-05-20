@@ -61,8 +61,8 @@ export function getTopByStocks(items, n = 5) {
 }
 
 // タグ集計
-// 戻り値: [{ name, posts, likes, avgLikes }] の配列 (記事数降順、タイブレークは合計いいね降順)
-export function aggregateTags(items, n = 10) {
+// 戻り値: [{ name, posts, likes, avgLikes }] の全タグ配列 (ソートは呼び出し側で行う)
+export function aggregateTags(items) {
   const map = new Map();
   for (const it of items) {
     const likes = it.likes_count || 0;
@@ -75,12 +75,35 @@ export function aggregateTags(items, n = 10) {
       map.set(name, cur);
     }
   }
-  const arr = [...map.entries()].map(([name, v]) => ({
+  return [...map.entries()].map(([name, v]) => ({
     name,
     posts: v.posts,
     likes: v.likes,
     avgLikes: v.posts > 0 ? v.likes / v.posts : 0,
   }));
-  arr.sort((a, b) => (b.posts - a.posts) || (b.likes - a.likes));
-  return arr.slice(0, n);
+}
+
+// タグ配列のソート (新しい配列を返す)
+// key: "name" | "posts" | "likes" | "avgLikes"
+// dir: "asc" | "desc"
+export function sortTags(tags, key, dir = "desc") {
+  const factor = dir === "asc" ? 1 : -1;
+  const arr = [...tags];
+  arr.sort((a, b) => {
+    let cmp;
+    if (key === "name") cmp = a.name.localeCompare(b.name);
+    else cmp = (a[key] || 0) - (b[key] || 0);
+    if (cmp !== 0) return cmp * factor;
+    // タイブレーク: 合計いいね降順 → 記事数降順 → 名前昇順
+    if (key !== "likes") {
+      const d = (b.likes || 0) - (a.likes || 0);
+      if (d !== 0) return d;
+    }
+    if (key !== "posts") {
+      const d = (b.posts || 0) - (a.posts || 0);
+      if (d !== 0) return d;
+    }
+    return a.name.localeCompare(b.name);
+  });
+  return arr;
 }

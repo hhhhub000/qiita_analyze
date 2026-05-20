@@ -184,3 +184,17 @@ table.tags td.tag { font-weight: bold; }
 table.tags td.tag a { color: var(--primary); text-decoration: none; }
 table.tags td.tag a:hover { text-decoration: underline; }
 table.tags td.num { text-align: right; width: 70px; font-variant-numeric: tabular-nums; }
+table.tags th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+table.tags th.sortable:hover { background: #f0f0f0; }
+table.tags th.sortable.num { text-align: right; }
+table.tags .sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  color: #bbb;
+  font-size: 11px;
+}
+table.tags .sort-arrow.active { color: var(--primary); }
