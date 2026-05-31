@@ -42,6 +42,7 @@
       <div class="card"><div class="label">合計 いいね</div><div id="sumLikes" class="value">0</div></div>
       <div class="card"><div class="label">合計 ストック</div><div id="sumStocks" class="value">0</div></div>
       <div class="card"><div class="label">合計 Contribution</div><div id="sumTotal" class="value">0</div></div>
+      <div class="card" id="sumViewsCard"><div class="label">合計 閲覧数</div><div id="sumViews" class="value">0</div></div>
     </div>
 
     <div id="noteWrap" style="display:none; margin-bottom: 16px; color: var(--muted); font-size: 13px;">
@@ -74,6 +75,16 @@
           赤線=線形回帰によるトレンドライン。slope は1ヶ月あたりの増減ペース、R² は当てはまり度 (1に近いほど直線的に成長)。
         </div>
       </div>
+      <div class="chart-card chart-card-wide" id="viewsChartCard">
+        <h2>記事の閲覧数 (月次・累計)</h2>
+        <canvas id="viewsChart" height="160"></canvas>
+        <div id="viewsChartNote" class="hint" style="display:none;">
+          ※ 閲覧数は本人記事のみ取得可能です。トークンを指定ください。
+        </div>
+        <div id="viewsChartHint" class="hint" style="display:none;">
+          ※ 棒=その月に投稿した記事の閲覧数合計 / 線=累計閲覧数。<code>page_views_count</code> は記事所有者のみ取得可能なため、ご自身のユーザーIDとアクセストークンでの分析時のみ表示されます。
+        </div>
+      </div>
     </div>
 
     <!-- 記事 TOP5 ランキング -->
@@ -95,6 +106,18 @@
           </thead>
           <tbody id="topStocksBody"></tbody>
         </table>
+      </div>
+      <div class="chart-card chart-card-wide" id="topViewsCard">
+        <h2>閲覧数 TOP5</h2>
+        <table class="ranking">
+          <thead>
+            <tr><th>#</th><th>タイトル</th><th class="num">閲覧数</th><th class="num">いいね</th><th>投稿日</th></tr>
+          </thead>
+          <tbody id="topViewsBody"></tbody>
+        </table>
+        <div id="topViewsNote" class="hint" style="display:none;">
+          ※ 閲覧数は本人記事のみ取得可能です。トークンを指定ください。
+        </div>
       </div>
     </section>
 

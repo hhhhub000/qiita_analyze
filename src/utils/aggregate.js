@@ -46,6 +46,55 @@ export function aggregateByMonth(items) {
   return { labels: fill, monthly, cumulative, likesCum, stocksCum, postsCum };
 }
 
+// page_views_count を持つ記事が1件以上あるか
+// (Qiita API は記事所有者がトークン付きで取得した場合のみ値が入る)
+export function hasPageViews(items) {
+  return items.some((it) => typeof it.page_views_count === "number");
+}
+
+// 月次の閲覧数集計
+// page_views_count が数値の記事のみを対象とする
+export function aggregateViewsByMonth(items) {
+  const map = new Map();
+  for (const it of items) {
+    if (typeof it.page_views_count !== "number") continue;
+    const d = new Date(it.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    map.set(key, (map.get(key) || 0) + it.page_views_count);
+  }
+  const keys = [...map.keys()].sort();
+  if (keys.length === 0) {
+    return { labels: [], monthly: [], cumulative: [] };
+  }
+  const fill = [];
+  const [sy, sm] = keys[0].split("-").map(Number);
+  const [ey, em] = keys[keys.length - 1].split("-").map(Number);
+  let y = sy, m = sm;
+  while (y < ey || (y === ey && m <= em)) {
+    fill.push(`${y}-${String(m).padStart(2, "0")}`);
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  const monthly = [];
+  const cumulative = [];
+  let cum = 0;
+  for (const k of fill) {
+    const v = map.get(k) || 0;
+    monthly.push(v);
+    cum += v;
+    cumulative.push(cum);
+  }
+  return { labels: fill, monthly, cumulative };
+}
+
+// 閲覧数順 TOP N (page_views_count が数値の記事のみ)
+export function getTopByViews(items, n = 5) {
+  return items
+    .filter((it) => typeof it.page_views_count === "number")
+    .sort((a, b) => b.page_views_count - a.page_views_count)
+    .slice(0, n);
+}
+
 // いいね順 TOP N
 export function getTopByLikes(items, n = 5) {
   return [...items]

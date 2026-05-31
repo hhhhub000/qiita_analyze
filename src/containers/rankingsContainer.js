@@ -1,12 +1,14 @@
-import { getTopByLikes, getTopByStocks } from "../utils/aggregate.js";
+import { getTopByLikes, getTopByStocks, getTopByViews, hasPageViews } from "../utils/aggregate.js";
 import { formatDate } from "../utils/format.js";
 
-let rootEl, likesTbody, stocksTbody;
+let rootEl, likesTbody, stocksTbody, viewsTbody, viewsNoteEl;
 
 export function init(el) {
   rootEl = el;
   likesTbody = el.querySelector("#topLikesBody");
   stocksTbody = el.querySelector("#topStocksBody");
+  viewsTbody = el.querySelector("#topViewsBody");
+  viewsNoteEl = el.querySelector("#topViewsNote");
 }
 
 function esc(s) {
@@ -40,10 +42,39 @@ function rowsHtml(items, metric) {
   }).join("");
 }
 
+function viewsRowsHtml(items) {
+  if (!items.length) return `<tr><td colspan="5" class="no-data">データなし</td></tr>`;
+  return items.map((it, i) => {
+    const views = (it.page_views_count || 0).toLocaleString();
+    const likes = (it.likes_count || 0).toLocaleString();
+    const date = formatDate(it.created_at);
+    const url = esc(it.url || "");
+    const title = esc(it.title || "(no title)");
+    return `
+      <tr>
+        <td class="rank">${i + 1}</td>
+        <td class="title"><a href="${url}" target="_blank" rel="noopener">${title}</a></td>
+        <td class="num" style="color:#2c3e50;font-weight:bold;">${views}</td>
+        <td class="num">${likes}</td>
+        <td class="date">${date}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
 export function render(items) {
   if (!items || items.length === 0) { clear(); return; }
   likesTbody.innerHTML = rowsHtml(getTopByLikes(items, 5), "likes");
   stocksTbody.innerHTML = rowsHtml(getTopByStocks(items, 5), "stocks");
+
+  if (hasPageViews(items)) {
+    viewsTbody.innerHTML = viewsRowsHtml(getTopByViews(items, 5));
+    if (viewsNoteEl) viewsNoteEl.style.display = "none";
+  } else {
+    viewsTbody.innerHTML = `<tr><td colspan="5" class="no-data">閲覧数は本人記事のみ取得可能です。トークンを指定ください。</td></tr>`;
+    if (viewsNoteEl) viewsNoteEl.style.display = "none";
+  }
+
   rootEl.style.display = "grid";
 }
 
@@ -51,4 +82,5 @@ export function clear() {
   if (rootEl) rootEl.style.display = "none";
   if (likesTbody) likesTbody.innerHTML = "";
   if (stocksTbody) stocksTbody.innerHTML = "";
+  if (viewsTbody) viewsTbody.innerHTML = "";
 }

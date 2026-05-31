@@ -1,9 +1,10 @@
-import { aggregateByMonth } from "../utils/aggregate.js";
+import { aggregateByMonth, aggregateViewsByMonth, hasPageViews } from "../utils/aggregate.js";
 import { formatNum } from "../utils/format.js";
 import { movingAverage, linearRegression } from "../utils/stats.js";
 
-let rootEl, noteEl, lineCanvas, monthlyCanvas, pieCanvas;
-let lineChart, monthlyChart, pieChart;
+let rootEl, noteEl, lineCanvas, monthlyCanvas, pieCanvas, viewsCanvas;
+let viewsCardEl, viewsNoteEl, viewsHintEl;
+let lineChart, monthlyChart, pieChart, viewsChart;
 
 export function init(el, noteWrapEl) {
   rootEl = el;
@@ -11,6 +12,10 @@ export function init(el, noteWrapEl) {
   lineCanvas = el.querySelector("#lineChart");
   monthlyCanvas = el.querySelector("#monthlyChart");
   pieCanvas = el.querySelector("#pieChart");
+  viewsCanvas = el.querySelector("#viewsChart");
+  viewsCardEl = el.querySelector("#viewsChartCard");
+  viewsNoteEl = el.querySelector("#viewsChartNote");
+  viewsHintEl = el.querySelector("#viewsChartHint");
 }
 
 export function render(items) {
@@ -140,6 +145,54 @@ export function render(items) {
     options: { responsive: true },
   });
 
+  // ===== チャートD: 閲覧数 (本人記事のみ) =====
+  if (viewsChart) { viewsChart.destroy(); viewsChart = null; }
+  if (hasPageViews(items)) {
+    const v = aggregateViewsByMonth(items);
+    viewsCanvas.style.display = "";
+    if (viewsNoteEl) viewsNoteEl.style.display = "none";
+    if (viewsHintEl) viewsHintEl.style.display = "block";
+    viewsChart = new Chart(viewsCanvas, {
+      type: "bar",
+      data: {
+        labels: v.labels,
+        datasets: [
+          {
+            label: "月次 閲覧数",
+            data: v.monthly,
+            type: "bar",
+            backgroundColor: "rgba(54,162,235,0.4)",
+            borderColor: "rgba(54,162,235,0.8)",
+            borderWidth: 1,
+            yAxisID: "y",
+          },
+          {
+            label: "累計 閲覧数",
+            data: v.cumulative,
+            type: "line",
+            borderColor: "#2c3e50",
+            backgroundColor: "rgba(44,62,80,0.05)",
+            fill: false,
+            tension: 0.2,
+            yAxisID: "y1",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          y: { beginAtZero: true, position: "left", title: { display: true, text: "月次" } },
+          y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "累計" } },
+        },
+      },
+    });
+  } else {
+    viewsCanvas.style.display = "none";
+    if (viewsNoteEl) viewsNoteEl.style.display = "block";
+    if (viewsHintEl) viewsHintEl.style.display = "none";
+  }
+
   rootEl.style.display = "grid";
   if (noteEl) noteEl.style.display = "block";
 }
@@ -148,6 +201,7 @@ export function clear() {
   if (lineChart) { lineChart.destroy(); lineChart = null; }
   if (monthlyChart) { monthlyChart.destroy(); monthlyChart = null; }
   if (pieChart) { pieChart.destroy(); pieChart = null; }
+  if (viewsChart) { viewsChart.destroy(); viewsChart = null; }
   if (rootEl) rootEl.style.display = "none";
   if (noteEl) noteEl.style.display = "none";
 }
